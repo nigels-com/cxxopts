@@ -732,6 +732,27 @@ TEST_CASE("std::optional", "[optional]") {
 }
 #endif
 
+#ifdef CXXOPTS_HAS_FILESYSTEM
+TEST_CASE("std::filesystem::path", "[path]") {
+  std::filesystem::path path;
+  cxxopts::Options options("path", " - tests path");
+  options.add_options()
+    ("path", "a path", cxxopts::value<std::filesystem::path>(path));
+
+  Argv av({"path", "--path", "Hello World.txt"});
+
+  auto** argv = av.argv();
+  auto argc = av.argc();
+
+  REQUIRE(path.empty());
+
+  options.parse(argc, argv);
+
+  REQUIRE(!path.empty());
+  CHECK(path == "Hello World.txt");
+}
+#endif
+
 TEST_CASE("Unrecognised options", "[options]") {
   cxxopts::Options options("unknown_options", " - test unknown options");
 
@@ -836,6 +857,7 @@ TEST_CASE("Optional value", "[optional]")
 
   SECTION("Available") {
     Argv av({
+      "available",
       "--int",
       "42",
       "--float",
@@ -853,13 +875,14 @@ TEST_CASE("Optional value", "[optional]")
     CHECK(result.as_optional<float>("float"));
     CHECK(result.as_optional<std::string>("string"));
 
-    CHECK(*result.as_optional<int>("int") == 42);
-    CHECK(*result.as_optional<float>("float") == 3.141);
-    CHECK(*result.as_optional<std::string>("string") == "Hello");
+    CHECK(result.as_optional<int>("int") == 42);
+    CHECK(result.as_optional<float>("float") == 3.141f);
+    CHECK(result.as_optional<std::string>("string") == "Hello");
   }
 
   SECTION("Unavailable") {
     Argv av({
+      "unavailable"
     });
 
     auto** argv = av.argv();
